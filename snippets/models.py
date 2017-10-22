@@ -3,7 +3,7 @@ import uuid
 
 def scramble_uploaded_filename(instance, filename):
     extension = filename.split(".")[-1]
-    return "images/{}.{}".format(uuid.uuid4(), extension)
+    return "webapps/dir/images/{}.{}".format(uuid.uuid4(), extension)
 
 class Profile(models.Model):
     owner = models.ForeignKey('auth.User', related_name='profiles', on_delete=models.CASCADE)
