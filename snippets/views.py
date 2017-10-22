@@ -259,7 +259,7 @@ def qr_generate(request):
     img = pyqrcode.create(data)
     img = img.svg('webapps/dir/images/' + str(qrname) + '.svg', scale=8)
     # img.save('images/' + str(qrname) + '.svg')
-    return Response({'response': 'ok', 'qrfilename': str(qrname) + '.png'})
+    return Response({'response': 'ok', 'qrfilename': str(qrname) + '.svg'})
 
 @api_view(['PUT'])
 @permission_classes((permissions.IsAuthenticated, IsOwnerOrReadOnly))
