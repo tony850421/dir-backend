@@ -12,6 +12,7 @@ from rest_framework.reverse import reverse
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.pagination import PageNumberPagination
 # import qrcode
+import pyqrcode
 import uuid
 import urllib
 from django.db.models import Q
@@ -252,10 +253,12 @@ def qr_generate(request):
     qrname = uuid.uuid4()
     tshirt = TShirt(owner=request.user, message="", color="black", size="M", code=qrname)
     tshirt.save()
-    # data = str(urllib.parse.quote('http://www.dir.com/#/tshirts/', safe=':/#-')) + str(qrname)
-    # print(data)
+    data = str(urllib.parse.quote('http://www.dir.com/#/tshirts/', safe=':/#-')) + str(qrname)
+    print(data)
     # img = qrcode.make(data)
-    # img.save('images/' + str(qrname) + '.png')
+    img = pyqrcode.create(data)
+    img = img.svg('webapps/dir/images/' + str(qrname) + '.svg', scale=8)
+    # img.save('images/' + str(qrname) + '.svg')
     return Response({'response': 'ok', 'qrfilename': str(qrname) + '.png'})
 
 @api_view(['PUT'])
