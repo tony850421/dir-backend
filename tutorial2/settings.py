@@ -25,7 +25,7 @@ SECRET_KEY = '$o%*ndnb&1n7!j&*!a!_b$qyowzyj47r!ai8m=ahgno9f4jy8a'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['tony850421.webfactional.com','192.168.1.130', 'localhost', '10.58.20.225', '192.168.63.103', 'www.dir.com']
+ALLOWED_HOSTS = ['tony850421.webfactional.com','192.168.1.130', 'localhost', 'www.dircoolstuff.com', '192.168.63.103', 'www.dir.com']
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
