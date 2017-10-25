@@ -16,6 +16,8 @@ import pyqrcode
 import uuid
 import urllib
 from django.db.models import Q
+from rest_framework.filters import OrderingFilter, SearchFilter
+from django_filters.rest_framework import DjangoFilterBackend, FilterSet
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -51,7 +53,14 @@ class ProfileList(generics.ListCreateAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
+    
+    pagination_class = StandardResultsSetPagination
+    
+    filter_backends = (OrderingFilter, SearchFilter, )
+    ordering_fields = ('score', 'rating')
+    # ordering = ('created',)
+    search_fields = ('rating', )
+    
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
@@ -116,6 +125,9 @@ class SnippetList(generics.ListCreateAPIView):
     # queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    filter_backends = (OrderingFilter, )
+    ordering = ('-created',)
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
