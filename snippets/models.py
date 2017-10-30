@@ -8,6 +8,7 @@ def scramble_uploaded_filename(instance, filename):
 class Profile(models.Model):
     owner = models.ForeignKey('auth.User', related_name='profiles', on_delete=models.CASCADE)
 
+    fullname = models.CharField(max_length=100, blank=True, default='')
     created = models.DateTimeField(auto_now_add=True)
     info = models.TextField()
     rating = models.DecimalField(max_digits=4, decimal_places=2)

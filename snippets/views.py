@@ -20,7 +20,12 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 12
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+class SnippetPagination(PageNumberPagination):
+    page_size = 5
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
@@ -55,11 +60,11 @@ class ProfileList(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     
     pagination_class = StandardResultsSetPagination
-    
+
     filter_backends = (OrderingFilter, SearchFilter, )
-    ordering_fields = ('score', 'rating')
+    ordering_fields = ('score', 'rating', 'created')
     # ordering = ('created',)
-    search_fields = ('rating', )
+    search_fields = ('fullname', 'owner__username')
     
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
@@ -126,6 +131,8 @@ class SnippetList(generics.ListCreateAPIView):
     serializer_class = SnippetSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
+    pagination_class = SnippetPagination
+
     filter_backends = (OrderingFilter, )
     ordering = ('-created',)
 
@@ -185,7 +192,7 @@ class MessageList(generics.ListCreateAPIView):
 class MessageDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
 @api_view(['GET'])
 def api_root(request, format=None):
@@ -248,15 +255,17 @@ def create_user(request):
             return Response({'response': 'bad'})
 
 @api_view(['POST'])
-@permission_classes((AllowAny,))
+@permission_classes((permissions.IsAuthenticated,))
 def update_user(request):
     queryset = User.objects.all()
     username = request.data['username']
     queryset = queryset.filter(username=username)
-    user = queryset[0]
-    user.set_password(request.data['password'])
-    user.save()
-    return Response({'response': 'ok'})
+    if (len(queryset) == 1):
+        user = queryset[0]
+        user.set_password(request.data['password'])
+        user.save()
+        return Response({'response': 'ok'})
+    return Response({'response': 'bad'})
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -280,6 +289,7 @@ def update_profile(request):
     info = request.data['info']
     rating = request.data['rating']
     score = request.data['score']
+    fullname = request.data['fullname']
     queryset = Profile.objects.all()
     queryset = queryset.filter(id=id)
     if (len(queryset) == 1):
@@ -287,6 +297,7 @@ def update_profile(request):
         profile.info = info
         profile.rating = rating
         profile.score = score
+        profile.fullname = fullname
         profile.save()
         return Response({'response': 'ok'})
     return Response({'response': 'bad'})

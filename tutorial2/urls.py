@@ -16,8 +16,9 @@ Including another URLconf
 from django.conf.urls import url, include
 
 urlpatterns = [
-    url(r'^', include('snippets.urls')),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^api/', include('snippets.urls')),
+    url(r'^api/api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     # url(r'^api-token-auth/', 'rest_framework.authtoken.views.obtain_auth_token'),
-    url(r'^server/tracking/', include('tracking.urls')),
+    # url(r'^api/login/', include('rest_social_auth.urls_session')),
+    url(r'^api/tracking/', include('tracking.urls')),
 ]

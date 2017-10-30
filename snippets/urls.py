@@ -55,6 +55,6 @@ urlpatterns += [
     #                            namespace='rest_framework')),
     url(r'^api-auth/register', views.create_user),
     url(r'^api-auth/update', views.update_user),
-    url(r'^api/updateprofile', views.update_profile),
-    url(r'^api/qrcode', views.qr_generate),
+    url(r'^updateprofile', views.update_profile),
+    url(r'^qrcode', views.qr_generate),
 ]

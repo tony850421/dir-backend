@@ -25,12 +25,22 @@ SECRET_KEY = '$o%*ndnb&1n7!j&*!a!_b$qyowzyj47r!ai8m=ahgno9f4jy8a'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['tony850421.webfactional.com','192.168.1.130', 'localhost', 'www.dircoolstuff.com', '192.168.63.103', 'www.dir.com']
+ALLOWED_HOSTS = ['*']
 
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_HTTPONLY = False
+
 # CORS_EXPOSE_HEADERS = ('Set-Cookie')
+# SESSION_COOKIE_DOMAIN = '.dir.com'
+# SESSION_COOKIE_NAME = "tonycookiename"
+
+# CORS_ORIGIN_WHITELIST = [
+#     'www.api.dir.com',
+#     'www.dir.com',
+#     'dir.com',
+#     'api.dir.com',
+# ]
 
 LOGIN_REDIRECT_URL = ('../..')
 
@@ -51,6 +61,9 @@ INSTALLED_APPS = (
     'rest_framework',
     'snippets',
     'tracking',
+    # 'social.apps.django_app.default', #add this to installed apps
+    # 'social_django',  # django social auth
+    # 'rest_social_auth',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -84,6 +97,21 @@ TEMPLATES = [
         },
     },
 ]
+
+# SOCIAL_AUTH_FACEBOOK_KEY = '128874921166794' #myfirstapp
+# SOCIAL_AUTH_FACEBOOK_SECRET = '368776d7bbad5dc969e7e57eb6486215'
+# SOCIAL_AUTH_FACEBOOK_SCOPE = ['email', ]  # optional
+# SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {'locale': 'ru_RU'}  # optional
+
+# REST_SOCIAL_OAUTH_REDIRECT_URI = '/'
+# REST_SOCIAL_DOMAIN_FROM_ORIGIN = True
+
+AUTHENTICATION_BACKENDS = (
+ # 'social_core.backends.facebook.FacebookOAuth2',
+ # 'social.backends.facebook.FacebookAppOAuth2',
+ # 'social.backends.facebook.FacebookOAuth2',
+ 'django.contrib.auth.backends.ModelBackend',
+)
 
 WSGI_APPLICATION = 'tutorial2.wsgi.application'
 

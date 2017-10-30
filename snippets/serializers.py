@@ -25,7 +25,7 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar')
+        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname')
 
 class SocialNetworkSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
