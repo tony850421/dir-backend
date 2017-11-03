@@ -1,5 +1,5 @@
-from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message
-from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerializer, ProfileSerializer, SocialNetworkSerializer, StockSerializer, MessageSerializer
+from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap
+from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerializer, ProfileSerializer, SocialNetworkSerializer, StockSerializer, MessageSerializer, ClapSerializer
 from rest_framework import generics
 from django.contrib import auth
 from django.contrib.auth.models import User
@@ -18,6 +18,8 @@ import urllib
 from django.db.models import Q
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet
+from snippets.utils import send_html_mail
+import json
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 12
@@ -73,6 +75,16 @@ class ProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+
+class ClapList(generics.ListCreateAPIView):
+    queryset = Clap.objects.all()
+    serializer_class = ClapSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+class ClapDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Clap.objects.all()
+    serializer_class = ClapSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
 class SocialNetworkList(generics.ListCreateAPIView):
     queryset = SocialNetwork.objects.all()
@@ -174,11 +186,6 @@ class MessageList(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
     def get_queryset(self):
-        """
-        Optionally restricts the returned Users to a given user,
-        by filtering against a `username` query parameter in the URL.
-        http://example.com/api/users?username=tony
-        """
         queryset = Message.objects.all()
         sender = self.request.query_params.get('sender', None)
         receiver = self.request.query_params.get('receiver', None)
@@ -203,11 +210,12 @@ def api_root(request, format=None):
         'tshirts': reverse('tshirt-list', request=request, format=format),
         'snippets': reverse('snippet-list', request=request, format=format),
         'stocks': reverse('stock-list', request=request, format=format),
-        'messages': reverse('message-list', request=request, format=format)
+        'messages': reverse('message-list', request=request, format=format),
+        'claps': reverse('clap-list', request=request, format=format)
     })
 
 @api_view(['POST'])
-@permission_classes((AllowAny,))
+@permission_classes((AllowAny, ))
 def create_user(request):
     print("create_user")
     pin = request.data['pin']
@@ -228,10 +236,14 @@ def create_user(request):
             if user is not None:
                 print("nice and easy")
                 tshirt = TShirt(owner=user, message="", color=stock.color, size=stock.size, code=stock.code)
-                profile = Profile(owner=user, info="User information", rating="0.0", score='0.0')
+                profile = Profile(owner=user, email=request.data['email'], info="Please complete your profile")
                 tshirt.save()
                 profile.save()
                 stock.delete()
+
+                #test email
+                send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
+                #end test
 
             return Response({'response': 'ok'})
         else:
@@ -246,8 +258,13 @@ def create_user(request):
             user = auth.authenticate(username=request.data['username'], password=request.data['password']);
             if user is not None:
                 print("nice and easy two")
-                profile = Profile(owner=user, info="User information", rating="0.0", score='0.0')
+                print('email:'+request.data['email'])
+                profile = Profile(owner=user, email=request.data['email'], info="Please complete your profile")
                 profile.save()
+
+                #test email
+                send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
+                #end test
 
             return Response({'response': 'ok'})
         else:
@@ -264,6 +281,16 @@ def update_user(request):
         user = queryset[0]
         user.set_password(request.data['password'])
         user.save()
+
+        #email test
+        queryset = Profile.objects.all()
+        queryset = queryset.filter(owner=user)
+        email = queryset.email
+        send_html_mail('Password change', 
+                       'Your DirStuff password have been changed. Visit our website: http://www.dircoolstuff.com/dir', 
+                       email)
+        #end test
+
         return Response({'response': 'ok'})
     return Response({'response': 'bad'})
 
@@ -274,12 +301,13 @@ def qr_generate(request):
     qrname = uuid.uuid4()
     tshirt = TShirt(owner=request.user, message="", color="black", size="M", code=qrname)
     tshirt.save()
-    data = str(urllib.parse.quote('http://www.dir.com/#/tshirts/', safe=':/#-')) + str(qrname)
+    data = str(urllib.parse.quote('http://www.dircoolstuff.com/dir/#/tshirts/', safe=':/#-')) + str(qrname)
     print(data)
     # img = qrcode.make(data)
     img = pyqrcode.create(data)
     img = img.svg('webapps/dir/images/' + str(qrname) + '.svg', scale=8)
     # img.save('images/' + str(qrname) + '.svg')
+
     return Response({'response': 'ok', 'qrfilename': str(qrname) + '.svg'})
 
 @api_view(['PUT'])
@@ -290,14 +318,50 @@ def update_profile(request):
     rating = request.data['rating']
     score = request.data['score']
     fullname = request.data['fullname']
-    queryset = Profile.objects.all()
-    queryset = queryset.filter(id=id)
-    if (len(queryset) == 1):
-        profile = queryset[0]
+    email = request.data['email']
+    profile = Profile.objects.get(pk=id)
+    if (profile):
         profile.info = info
         profile.rating = rating
         profile.score = score
         profile.fullname = fullname
+        profile.email = email
         profile.save()
+        
+        #test email
+        send_html_mail('Update Profile', 'Your DirStuff profile have been updated', profile.email)
+        #end test
+
         return Response({'response': 'ok'})
+    return Response({'response': 'bad'})
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated, ))
+def clap_profile(request):
+    id = request.data['id']
+    test = json.loads(request.data['test'])
+    profile = Profile.objects.get(pk=id)
+    if(profile):
+        queryset = Clap.objects.all()
+        claps = queryset.filter(profile=profile)
+        exist = claps.filter(username=request.user.username)
+        # queryset = queryset.filter(Q(profile=profile) & Q(username=request.user.username))
+        if exist.count() == 0 and test == False:
+            clap = Clap(profile=profile, username=request.user.username)
+            clap.save()
+            profile.score = claps.count()
+            profile.save()
+
+            # test email
+            send_html_mail('Claps', 'Your DirStuff profile received a new clap', profile.email)
+            # end test
+
+        if exist.count() == 0 and test == True:
+            return Response({'response': 'yes'})
+ 
+        if exist.count() > 0 and test == True:
+            return Response({'response': 'not'})
+
+        return Response({'response': profile.score})
+
     return Response({'response': 'bad'})

@@ -8,12 +8,21 @@ def scramble_uploaded_filename(instance, filename):
 class Profile(models.Model):
     owner = models.ForeignKey('auth.User', related_name='profiles', on_delete=models.CASCADE)
 
+    email = models.EmailField(blank=False, default='')
     fullname = models.CharField(max_length=100, blank=True, default='')
     created = models.DateTimeField(auto_now_add=True)
     info = models.TextField()
-    rating = models.DecimalField(max_digits=4, decimal_places=2)
-    score = models.DecimalField(max_digits=4, decimal_places=2)
+    rating = models.DecimalField(default=0.0, max_digits=4, decimal_places=2, editable=False)
+    score = models.PositiveIntegerField(default=0, editable=False)
     avatar = models.ImageField(upload_to=scramble_uploaded_filename, null=True, blank=True)
+
+    class Meta:
+        ordering = ('created',)
+
+class Clap(models.Model):
+    profile = models.ForeignKey(Profile, related_name='claps', on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=100, blank=True, default='')
 
     class Meta:
         ordering = ('created',)

@@ -46,7 +46,14 @@ urlpatterns = format_suffix_patterns([
         name='user-list'),
     url(r'^users/(?P<pk>[0-9]+)/$',
         views.UserDetail.as_view(),
-        name='user-detail')
+        name='user-detail'),
+
+    url(r'^claps/$',
+        views.ClapList.as_view(),
+        name='clap-list'),
+    url(r'^claps/(?P<pk>[0-9]+)/$',
+        views.ClapDetail.as_view(),
+        name='clap-detail')
 ])
 
 # Login and logout views for the browsable API
@@ -56,5 +63,6 @@ urlpatterns += [
     url(r'^api-auth/register', views.create_user),
     url(r'^api-auth/update', views.update_user),
     url(r'^updateprofile', views.update_profile),
+    url(r'^clap-profile', views.clap_profile),
     url(r'^qrcode', views.qr_generate),
 ]

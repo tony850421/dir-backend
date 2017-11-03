@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message
+from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,7 +25,15 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname')
+        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname', 'email')
+
+
+class ClapSerializer(serializers.HyperlinkedModelSerializer):
+    # owner = serializers.ReadOnlyField(source='owner.username')
+
+    class Meta:
+        model = Clap
+        fields = ('url', 'id', 'created', 'profile','username')
 
 class SocialNetworkSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
