@@ -15,6 +15,7 @@ class Profile(models.Model):
     rating = models.DecimalField(default=0.0, max_digits=4, decimal_places=2, editable=False)
     score = models.PositiveIntegerField(default=0, editable=False)
     avatar = models.ImageField(upload_to=scramble_uploaded_filename, null=True, blank=True)
+    qrcode = models.CharField(max_length=200, blank=True, default='')
 
     class Meta:
         ordering = ('created',)
@@ -79,4 +80,4 @@ class Message(models.Model):
     readed = models.BooleanField(default=False)
 
     class Meta:
-        ordering = ('created',)
+        ordering = ('-created',)

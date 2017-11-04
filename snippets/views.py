@@ -20,6 +20,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet
 from snippets.utils import send_html_mail
 import json
+from django.contrib.auth import update_session_auth_hash
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 12
@@ -274,39 +275,44 @@ def create_user(request):
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def update_user(request):
-    queryset = User.objects.all()
-    username = request.data['username']
-    queryset = queryset.filter(username=username)
-    if (len(queryset) == 1):
-        user = queryset[0]
-        user.set_password(request.data['password'])
-        user.save()
 
-        #email test
-        queryset = Profile.objects.all()
-        queryset = queryset.filter(owner=user)
-        email = queryset.email
-        send_html_mail('Password change', 
-                       'Your DirStuff password have been changed. Visit our website: http://www.dircoolstuff.com/dir', 
-                       email)
-        #end test
+    user = request.user
+    user.set_password(request.data['password'])
+    user.save()
+    update_session_auth_hash(request, request.user)
 
-        return Response({'response': 'ok'})
-    return Response({'response': 'bad'})
+    #email test
+    queryset = Profile.objects.all()
+    queryset = queryset.filter(owner=user)
+    email = queryset[0].email
+    print(email)
+    send_html_mail('Password change', 
+                   'Your DirStuff password have been changed. Visit our website: http://www.dircoolstuff.com/dir', 
+                   email)
+    #end test
+
+    return Response({'response': 'ok'})
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def qr_generate(request):
+    print('qr_generate')
     print(request.user.username)
     qrname = uuid.uuid4()
     tshirt = TShirt(owner=request.user, message="", color="black", size="M", code=qrname)
     tshirt.save()
     data = str(urllib.parse.quote('http://www.dircoolstuff.com/dir/#/tshirts/', safe=':/#-')) + str(qrname)
     print(data)
+
     # img = qrcode.make(data)
     img = pyqrcode.create(data)
     img = img.svg('webapps/dir/images/' + str(qrname) + '.svg', scale=8)
     # img.save('images/' + str(qrname) + '.svg')
+
+    id = request.data['id']
+    profile = Profile.objects.get(pk=id)
+    profile.qrcode = str(qrname) + '.svg'
+    profile.save()
 
     return Response({'response': 'ok', 'qrfilename': str(qrname) + '.svg'})
 
