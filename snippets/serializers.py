@@ -7,12 +7,13 @@ class UserSerializer(serializers.ModelSerializer):
     snippets = serializers.HyperlinkedRelatedField(many=True, view_name='snippet-detail', read_only=True)
     profiles = serializers.HyperlinkedRelatedField(many=True, view_name='profile-detail', read_only=True)
     socialnetworks = serializers.HyperlinkedRelatedField(many=True, view_name='socialnetwork-detail', read_only=True)
+    messages = serializers.HyperlinkedRelatedField(many=True, view_name='message-detail', read_only=True)
 
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'password', 'email', 'first_name', 'last_name', 'tshirts', 'snippets', 'profiles', 'socialnetworks')
+        fields = ('id', 'username', 'password', 'email', 'first_name', 'last_name', 'tshirts', 'snippets', 'profiles', 'socialnetworks', 'messages')
 
     def create(self, validated_data):
         user = super(UserSerializer, self).create(validated_data)
@@ -63,7 +64,8 @@ class StockSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'id', 'color', 'size', 'code', 'pin')
 
 class MessageSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
 
     class Meta:
         model = Message
-        fields = ('url', 'id', 'created', 'sender', 'receiver', 'subject', 'body', 'readed')
+        fields = ('url', 'id', 'owner', 'created', 'sender', 'receiver', 'subject', 'body', 'readed')

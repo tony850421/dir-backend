@@ -11,8 +11,8 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.pagination import PageNumberPagination
-# import qrcode
 import pyqrcode
+from PIL import Image
 import uuid
 import urllib
 from django.db.models import Q
@@ -33,7 +33,6 @@ class SnippetPagination(PageNumberPagination):
     max_page_size = 1000
 
 class UserList(generics.ListAPIView):
-    #queryset = User.objects.all()
     serializer_class = UserSerializer
     # permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     pagination_class = StandardResultsSetPagination
@@ -42,7 +41,7 @@ class UserList(generics.ListAPIView):
         """
         Optionally restricts the returned Users to a given user,
         by filtering against a `username` query parameter in the URL.
-        http://example.com/api/users?username=tony
+        api/users?username=tony
         """
         queryset = User.objects.all()
         username = self.request.query_params.get('username', None)
@@ -53,7 +52,7 @@ class UserList(generics.ListAPIView):
 class UserDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsMySelfOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAdminUser)
 
 class ProfileList(generics.ListCreateAPIView):
     parser_classes = (JSONParser, MultiPartParser, FormParser,)
@@ -85,7 +84,7 @@ class ClapList(generics.ListCreateAPIView):
 class ClapDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Clap.objects.all()
     serializer_class = ClapSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
 class SocialNetworkList(generics.ListCreateAPIView):
     queryset = SocialNetwork.objects.all()
@@ -97,9 +96,9 @@ class SocialNetworkList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """
-        Optionally restricts the returned Users to a given user,
+        Optionally restricts the returned SocialNetwork to a given user,
         by filtering against a `username` query parameter in the URL.
-        http://example.com/api/users?username=tony
+        api/socialnetworks?username=tony
         """
         queryset = SocialNetwork.objects.all()
         username = self.request.query_params.get('username', None)
@@ -115,7 +114,6 @@ class SocialNetworkDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
 class TShirtList(generics.ListCreateAPIView):
-    # queryset = TShirt.objects.all()
     serializer_class = TShirtSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
@@ -124,9 +122,9 @@ class TShirtList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """
-        Optionally restricts the returned Users to a given user,
-        by filtering against a `username` query parameter in the URL.
-        http://example.com/api/tshirts?code=1234
+        Optionally restricts the returned TShirt to a given code,
+        by filtering against a `code` query parameter in the URL.
+        api/tshirts?code=1234
         """
         queryset = TShirt.objects.all()
         code = self.request.query_params.get('code', None)
@@ -140,7 +138,6 @@ class TShirtDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
 class SnippetList(generics.ListCreateAPIView):
-    # queryset = Snippet.objects.all()
     serializer_class = SnippetSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
@@ -154,9 +151,9 @@ class SnippetList(generics.ListCreateAPIView):
 
     def get_queryset(self):
         """
-        Optionally restricts the returned Users to a given user,
+        Optionally restricts the returned Snippet to a given user,
         by filtering against a `username` query parameter in the URL.
-        http://example.com/api/users?username=tony
+        api/snippets?username=tony
         """
         queryset = Snippet.objects.all()
         username = self.request.query_params.get('username', None)
@@ -182,25 +179,21 @@ class StockDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAdminUser)
 
 class MessageList(generics.ListCreateAPIView):
-    # queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
     def get_queryset(self):
         queryset = Message.objects.all()
-        sender = self.request.query_params.get('sender', None)
-        receiver = self.request.query_params.get('receiver', None)
-        if sender is not None:
-            # queryset = queryset.filter(Q(sender=sender) | Q(receiver=receiver))
-            queryset = queryset.filter(sender=sender)
-        if receiver is not None:
-            queryset = queryset.filter(receiver=receiver)
+        queryset = queryset.filter(owner=self.request.user)
         return queryset
 
 class MessageDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
 @api_view(['GET'])
 def api_root(request, format=None):
@@ -237,7 +230,7 @@ def create_user(request):
             if user is not None:
                 print("nice and easy")
                 tshirt = TShirt(owner=user, message="", color=stock.color, size=stock.size, code=stock.code)
-                profile = Profile(owner=user, email=request.data['email'], info="Please complete your profile")
+                profile = Profile(owner=user, email=request.data['email'])
                 tshirt.save()
                 profile.save()
                 stock.delete()
@@ -260,7 +253,7 @@ def create_user(request):
             if user is not None:
                 print("nice and easy two")
                 print('email:'+request.data['email'])
-                profile = Profile(owner=user, email=request.data['email'], info="Please complete your profile")
+                profile = Profile(owner=user, email=request.data['email'])
                 profile.save()
 
                 #test email
@@ -273,7 +266,7 @@ def create_user(request):
             return Response({'response': 'bad'})
 
 @api_view(['POST'])
-@permission_classes((permissions.IsAuthenticated,))
+@permission_classes((permissions.IsAuthenticated, IsOwnerOrReadOnly))
 def update_user(request):
 
     user = request.user
@@ -296,25 +289,41 @@ def update_user(request):
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def qr_generate(request):
-    print('qr_generate')
-    print(request.user.username)
     qrname = uuid.uuid4()
+
     tshirt = TShirt(owner=request.user, message="", color="black", size="M", code=qrname)
     tshirt.save()
-    data = str(urllib.parse.quote('http://www.dircoolstuff.com/dir/#/tshirts/', safe=':/#-')) + str(qrname)
-    print(data)
 
-    # img = qrcode.make(data)
-    img = pyqrcode.create(data)
-    img = img.svg('webapps/dir/images/' + str(qrname) + '.svg', scale=8)
-    # img.save('images/' + str(qrname) + '.svg')
+    data = str(urllib.parse.quote('http://www.dircoolstuff.com/dir/#/tshirts/', safe=':/#-')) + str(qrname)
+
+    img = pyqrcode.create(data, error = 'H')
+    saveUri = 'webapps/dir/images/' + str(qrname) + '.png';
+    # img = img.svg('images/' + str(qrname) + '.svg', scale=8)
+    # img.png(saveUri, scale=10, module_color=[33, 22, 111, 128], background=[0xff, 0xff, 0xcc])
+    # img.png(saveUri, scale=10, module_color=[0, 184, 184, 255])
+    img.png(saveUri, scale=10)
 
     id = request.data['id']
     profile = Profile.objects.get(pk=id)
-    profile.qrcode = str(qrname) + '.svg'
+
+    if profile.avatar:
+        avatarUrl = profile.avatar.url
+        lavatar = avatarUrl.split("/")
+        avatar = lavatar[len(lavatar) - 1]
+        im = Image.open(saveUri)
+        im = im.convert("RGBA")
+        logo = Image.open('webapps/dir/images/' + avatar)
+        box = (230,230,350,350)
+        im.crop(box)
+        region = logo
+        region = region.resize((box[2] - box[0], box[3] - box[1]))
+        im.paste(region,box)
+        im.save(saveUri)
+
+    profile.qrcode = str(qrname) + '.png'
     profile.save()
 
-    return Response({'response': 'ok', 'qrfilename': str(qrname) + '.svg'})
+    return Response({'response': 'ok', 'qrfilename': str(qrname) + '.png'})
 
 @api_view(['PUT'])
 @permission_classes((permissions.IsAuthenticated, IsOwnerOrReadOnly))
@@ -371,3 +380,118 @@ def clap_profile(request):
         return Response({'response': profile.score})
 
     return Response({'response': 'bad'})
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def send_message(request):
+    sender = request.data['sender']
+    receiver = request.data['receiver']
+    subject = request.data['subject']
+    body = request.data['body']
+
+    users = User.objects.all()
+    queryset = users.filter(username=receiver)
+    if queryset:
+        receiverUser = queryset[0]
+        message = Message(owner=receiverUser, sender=sender, receiver=receiver, subject=subject, body=body, readed=False)
+        message.save()
+        message = Message(owner=request.user, sender=sender, receiver=receiver, subject=subject, body=body)
+        message.save()
+        return Response({'response': 'ok'})
+
+    return Response({'response': 'bad'})
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def link_stuff(request):
+    pin = request.data['pin']
+    queryset = Stock.objects.all()
+    queryset = queryset.filter(pin=pin)
+    if queryset:
+        stock = queryset[0]
+        tshirt = TShirt(owner=request.user, message="", color=stock.color, size=stock.size, code=stock.code)
+        tshirt.save()
+        stock.delete()
+
+        return Response({'response': 'ok'})
+
+    return Response({'response': 'bad'})
+
+@api_view(['POST'])
+@permission_classes((IsAdminUser,))
+def delete_user(request):
+    id = request.data['id']
+    profile = Profile.objects.get(pk=id)
+
+    user = profile.owner
+    user.delete()
+
+    return Response({'response': 'ok'})
+
+
+##################Tracking##################
+
+from datetime import timedelta
+from django import forms
+from django.shortcuts import render
+from django.utils.timezone import now
+
+from tracking.models import Visitor, Pageview
+from tracking.settings import TRACK_PAGEVIEWS
+
+# tracking wants to accept more formats than default, here they are
+input_formats = [
+    '%Y-%m-%d %H:%M:%S',    # '2006-10-25 14:30:59'
+    '%Y-%m-%d %H:%M',       # '2006-10-25 14:30'
+    '%Y-%m-%d',             # '2006-10-25'
+    '%Y-%m',                # '2006-10'
+    '%Y',                   # '2006'
+]
+
+# TRACK_PAGEVIEWS = True
+
+class DashboardForm(forms.Form):
+    start = forms.DateTimeField(required=False, input_formats=input_formats)
+    end = forms.DateTimeField(required=False, input_formats=input_formats)
+
+@api_view(['GET'])
+@permission_classes((AllowAny,))
+def tracking(request):
+    "Counts, aggregations and more!"
+    end_time = now()
+    start_time = end_time - timedelta(days=7)
+    defaults = {'start': start_time, 'end': end_time}
+
+    form = DashboardForm(data=request.GET or defaults)
+    if form.is_valid():
+        start_time = form.cleaned_data['start']
+        end_time = form.cleaned_data['end']
+
+    # determine when tracking began
+    try:
+        obj = Visitor.objects.order_by('start_time')[0]
+        track_start_time = obj.start_time
+    except (IndexError, Visitor.DoesNotExist):
+        track_start_time = now()
+
+    # # If the start_date is before tracking began, warn about incomplete data
+    # warn_incomplete = (start_time < track_start_time)
+
+    # # queries take `date` objects (for now)
+    # user_stats = Visitor.objects.user_stats(start_time, end_time)
+    visitor_stats = Visitor.objects.stats(start_time, end_time)
+    # if TRACK_PAGEVIEWS:
+    #     pageview_stats = Pageview.objects.stats(start_time, end_time)
+    # else:
+    #     pageview_stats = None
+
+    # context = {
+    #     # 'form': form,
+    #     'track_start_time': track_start_time,
+    #     'warn_incomplete': warn_incomplete,
+    #     'user_stats': user_stats,
+    #     'visitor_stats': visitor_stats,
+    #     'pageview_stats': pageview_stats,
+    # }
+    return Response({'response': visitor_stats})
+    # return render(request, 'tracking/dashboard.html', context)

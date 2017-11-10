@@ -11,7 +11,7 @@ class Profile(models.Model):
     email = models.EmailField(blank=False, default='')
     fullname = models.CharField(max_length=100, blank=True, default='')
     created = models.DateTimeField(auto_now_add=True)
-    info = models.TextField()
+    info = models.TextField(default='')
     rating = models.DecimalField(default=0.0, max_digits=4, decimal_places=2, editable=False)
     score = models.PositiveIntegerField(default=0, editable=False)
     avatar = models.ImageField(upload_to=scramble_uploaded_filename, null=True, blank=True)
@@ -71,8 +71,9 @@ class Stock(models.Model):
         ordering = ('created',)
 
 class Message(models.Model):
-    created = models.DateTimeField(auto_now_add=True)
+    owner = models.ForeignKey('auth.User', related_name='messages', on_delete=models.CASCADE)
 
+    created = models.DateTimeField(auto_now_add=True)
     sender = models.TextField()
     receiver = models.TextField()
     subject = models.TextField()

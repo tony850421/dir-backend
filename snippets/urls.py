@@ -58,11 +58,13 @@ urlpatterns = format_suffix_patterns([
 
 # Login and logout views for the browsable API
 urlpatterns += [
-    # url(r'^api-auth/', include('rest_framework.urls',
-    #                            namespace='rest_framework')),
     url(r'^api-auth/register', views.create_user),
     url(r'^api-auth/update', views.update_user),
     url(r'^updateprofile', views.update_profile),
     url(r'^clap-profile', views.clap_profile),
     url(r'^qrcode', views.qr_generate),
+    url(r'^send-message', views.send_message),
+    url(r'^link-stuff', views.link_stuff),
+    url(r'^delete-user', views.delete_user),
+    url(r'^track', views.tracking),
 ]
