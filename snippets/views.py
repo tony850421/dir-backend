@@ -294,7 +294,7 @@ def qr_generate(request):
     tshirt = TShirt(owner=request.user, message="", color="black", size="M", code=qrname)
     tshirt.save()
 
-    data = str(urllib.parse.quote('http://www.dircoolstuff.com/dir/#/tshirts/', safe=':/#-')) + str(qrname)
+    data = str(urllib.parse.quote('http://www.dircoolstuff.com/dir/#/viewtshirts/', safe=':/#-')) + str(qrname)
 
     img = pyqrcode.create(data, error = 'H')
     saveUri = 'webapps/dir/images/' + str(qrname) + '.png';
