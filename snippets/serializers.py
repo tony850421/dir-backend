@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap
+from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap, Follower, Notification
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -23,18 +23,38 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')
+    followers = serializers.HyperlinkedRelatedField(many=True, view_name='follower-detail', read_only=True)
+    claps = serializers.HyperlinkedRelatedField(many=True, view_name='clap-detail', read_only=True)
+    notifications = serializers.HyperlinkedRelatedField(many=True, view_name='notification-detail', read_only=True)
 
     class Meta:
         model = Profile
-        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname', 'email', 'qrcode')
+        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname', 'email', 'qrcode', 'claps', 'followers', 'notifications')
 
 
 class ClapSerializer(serializers.HyperlinkedModelSerializer):
-    # owner = serializers.ReadOnlyField(source='owner.username')
+    profile = serializers.ReadOnlyField(source='profile.owner.username')
 
     class Meta:
         model = Clap
-        fields = ('url', 'id', 'created', 'profile','username')
+        fields = ('url', 'id', 'created', 'profile', 'username')
+
+class FollowerSerializer(serializers.HyperlinkedModelSerializer):
+    profileUserName = serializers.ReadOnlyField(source='profile.owner.username')
+    profileFullName = serializers.ReadOnlyField(source='profile.fullname')
+    profileInfo = serializers.ReadOnlyField(source='profile.info')
+    profileAvatar = serializers.ReadOnlyField(source='profile.avatar.url')
+    profileId = serializers.ReadOnlyField(source='profile.id')
+
+    class Meta:
+        model = Follower
+        fields = ('url', 'id', 'created', 'username', 'userId', 'fullName', 'avatar', 'info', 'profileId', 'profileUserName', 'profileFullName', 'profileInfo', 'profileAvatar', 'currentFollowed')
+
+class NotificationSerializer(serializers.HyperlinkedModelSerializer):
+
+    class Meta:
+        model = Notification
+        fields = ('url', 'id', 'created', 'info', 'type', 'readed', 'profileId', 'profileFullName', 'profileAvatar')
 
 class SocialNetworkSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')

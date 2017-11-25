@@ -61,10 +61,18 @@ INSTALLED_APPS = (
     'rest_framework',
     'snippets',
     'tracking',
+    'django_apscheduler',
     # 'social.apps.django_app.default', #add this to installed apps
     # 'social_django',  # django social auth
     # 'rest_social_auth',
 )
+
+#Email
+EMAIL_HOST = 'smtp.webfaction.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'dirstuff'
+EMAIL_HOST_PASSWORD = 'dir1234'
+# EMAIL_USE_TLS = True
 
 MIDDLEWARE_CLASSES = (
     'tracking.middleware.VisitorTrackingMiddleware',

@@ -1,10 +1,10 @@
-from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap
-from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerializer, ProfileSerializer, SocialNetworkSerializer, StockSerializer, MessageSerializer, ClapSerializer
+from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap, Follower, Notification
+from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerializer, ProfileSerializer, SocialNetworkSerializer, StockSerializer, MessageSerializer, ClapSerializer, FollowerSerializer, NotificationSerializer
 from rest_framework import generics
 from django.contrib import auth
 from django.contrib.auth.models import User
 from rest_framework import permissions
-from snippets.permissions import IsOwnerOrReadOnly, IsMySelfOrReadOnly
+from snippets.permissions import IsOwnerOrReadOnly, IsMySelfOrReadOnly, IsProfileOwnerOrReadOnly
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
@@ -18,7 +18,7 @@ import urllib
 from django.db.models import Q
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend, FilterSet
-from snippets.utils import send_html_mail
+from snippets.utils import send_html_mail, create_new_notification
 import json
 from django.contrib.auth import update_session_auth_hash
 
@@ -74,17 +74,92 @@ class ProfileList(generics.ListCreateAPIView):
 class ProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
-class ClapList(generics.ListCreateAPIView):
+class ClapList(generics.ListAPIView):
     queryset = Clap.objects.all()
     serializer_class = ClapSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
 
-class ClapDetail(generics.RetrieveUpdateDestroyAPIView):
+class ClapDetail(generics.RetrieveAPIView):
     queryset = Clap.objects.all()
     serializer_class = ClapSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+class FollowerList(generics.ListAPIView):
+    serializer_class = FollowerSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+    def get_queryset(self):
+        username = self.request.user.username
+        me = self.request.query_params.get('me', None)
+        me = json.loads(me)
+        profileId = self.request.query_params.get('profileId', None)
+        profile = Profile.objects.get(pk=profileId)
+
+        queryset = Follower.objects.all()
+        following = queryset.filter(username=username)
+
+        if me is True:
+            queryset = Follower.objects.all()
+            queryset = queryset.filter(profile=profile)
+            profiles = Profile.objects.all()
+            for foll in queryset:
+                profile = profiles.filter(owner__username=foll.username)
+                if profile.count() == 0:
+                     foll.delete()
+                     continue
+
+                foll.fullName = profile[0].fullname
+                foll.info = profile[0].info
+                foll.userId = profile[0].id
+                foll.currentFollowed = False
+                foll.avatar = profile[0].avatar.url
+
+                for fwing in following:
+                    if foll.username == fwing.profile.owner.username:
+                        foll.currentFollowed = True
+                        break
+        else:
+            queryset = following
+        return queryset
+
+class FollowerDetail(generics.RetrieveAPIView):
+    queryset = Follower.objects.all()
+    serializer_class = FollowerSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+class NotificationList(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+    def get_queryset(self):
+        profiles = Profile.objects.all()
+        ps = profiles.filter(owner=self.request.user)
+        cprofile = ps[0]
+        queryset = Notification.objects.all()
+        notifications = queryset.filter(profile=cprofile)
+
+        for notif in notifications:
+            try:
+                prof = Profile.objects.get(pk=notif.profileId)
+            except Profile.DoesNotExist:
+                prof = None
+            if prof is not None:
+                notif.profileFullName = prof.fullname
+                notif.profileAvatar = prof.avatar
+                if notif.readed == False:
+                    notif.readed = True
+                    notif.save()
+            else:
+                notif.delete()
+        
+        return notifications
+
+class NotificationDetail(generics.RetrieveDestroyAPIView):
+    queryset = Notification.objects.all()
+    serializer_class = NotificationSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsProfileOwnerOrReadOnly )
 
 class SocialNetworkList(generics.ListCreateAPIView):
     queryset = SocialNetwork.objects.all()
@@ -93,6 +168,8 @@ class SocialNetworkList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+        # new notification
+        create_new_notification(self.request.user, 'newSocialNetwork')
 
     def get_queryset(self):
         """
@@ -148,6 +225,8 @@ class SnippetList(generics.ListCreateAPIView):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+        # new notification
+        create_new_notification(self.request.user, 'newSnippet')
 
     def get_queryset(self):
         """
@@ -172,6 +251,17 @@ class StockList(generics.ListCreateAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsAdminUser)
+
+    def perform_create(self, serializer):
+        code = uuid.uuid4()
+        pin = str(uuid.uuid4())[:8]
+        stocks = Stock.objects.all()
+        exist = stocks.filter(pin=pin)
+        while exist.count() != 0:
+            pin = str(uuid.uuid4())[:8]
+            exist = stocks.filter(pin=pin)
+        
+        serializer.save(code=code, pin=pin)
 
 class StockDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Stock.objects.all()
@@ -205,7 +295,9 @@ def api_root(request, format=None):
         'snippets': reverse('snippet-list', request=request, format=format),
         'stocks': reverse('stock-list', request=request, format=format),
         'messages': reverse('message-list', request=request, format=format),
-        'claps': reverse('clap-list', request=request, format=format)
+        'claps': reverse('clap-list', request=request, format=format),
+        'followers': reverse('follower-list', request=request, format=format),
+        'notifications': reverse('notification-list', request=request, format=format),
     })
 
 @api_view(['POST'])
@@ -230,7 +322,7 @@ def create_user(request):
             if user is not None:
                 print("nice and easy")
                 tshirt = TShirt(owner=user, message="", color=stock.color, size=stock.size, code=stock.code)
-                profile = Profile(owner=user, email=request.data['email'])
+                profile = Profile(owner=user, email=request.data['email'], fullname=request.data['username'])
                 tshirt.save()
                 profile.save()
                 stock.delete()
@@ -253,7 +345,7 @@ def create_user(request):
             if user is not None:
                 print("nice and easy two")
                 print('email:'+request.data['email'])
-                profile = Profile(owner=user, email=request.data['email'])
+                profile = Profile(owner=user, email=request.data['email'], fullname=request.data['username'])
                 profile.save()
 
                 #test email
@@ -382,6 +474,62 @@ def clap_profile(request):
     return Response({'response': 'bad'})
 
 @api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated, ))
+def follow(request):
+    # get current profile
+    qs = Profile.objects.all()
+    ps = qs.filter(owner=request.user)
+    myprofile = ps[0]
+    # end
+    id = request.data['id']
+    test = json.loads(request.data['test'])
+    profile = Profile.objects.get(pk=id)
+    if(profile):
+        queryset = Follower.objects.all()
+        followers = queryset.filter(profile=profile)
+        exist = followers.filter(username=request.user.username)
+        # queryset = queryset.filter(Q(profile=profile) & Q(username=request.user.username))
+        if exist.count() == 0 and test == False:
+            follower = Follower(profile=profile, username=request.user.username)
+            follower.save()
+
+            # new notification
+            notif = Notification(profile=profile, profileId=myprofile.id, type='newfollower')
+            notif.save()
+            # test email
+            send_html_mail('Follower', 'You have a new follower', profile.email)
+            # end test
+
+        if exist.count() == 0 and test == True:
+            return Response({'response': 'yes'})
+ 
+        if exist.count() > 0 and test == True:
+            return Response({'response': 'not'})
+
+        return Response({'response': 'good'})
+
+    return Response({'response': 'bad'})
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated, ))
+def unfollow(request):
+    id = request.data['id']
+    profile = Profile.objects.get(pk=id)
+
+    if(profile):
+        queryset = Follower.objects.all()
+        followers = queryset.filter(profile=profile)
+        exist = followers.filter(username=request.user.username)
+
+        if exist.count() != 0:
+            follower = exist[0]
+            follower.delete()
+
+        return Response({'response': 'good'})
+
+    return Response({'response': 'bad'})
+
+@api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def send_message(request):
     sender = request.data['sender']
@@ -423,11 +571,38 @@ def delete_user(request):
     id = request.data['id']
     profile = Profile.objects.get(pk=id)
 
+    notifications = Notification.objects.all()
+    notifications = notifications.filter(profileId=id)
+    for notif in notifications:
+        notif.delete()
+
     user = profile.owner
+
+    followers = Follower.objects.all()
+    followers = followers.filter(username=user.username)
+    for foll in followers:
+        foll.delete()
+
     user.delete()
 
     return Response({'response': 'ok'})
 
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def notifications_unreaded(request):
+    profiles = Profile.objects.all()
+    profiles = profiles.filter(owner=request.user)
+    profile = profiles[0]
+
+    notifications = Notification.objects.all()
+    notifications = notifications.filter(profile=profile)
+
+    count = 0
+    for notif in notifications:
+        if notif.readed == False:
+            count = count + 1
+
+    return Response({'unreaded': count})
 
 ##################Tracking##################
 

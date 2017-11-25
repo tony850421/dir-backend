@@ -14,7 +14,7 @@ class Profile(models.Model):
     info = models.TextField(default='')
     rating = models.DecimalField(default=0.0, max_digits=4, decimal_places=2, editable=False)
     score = models.PositiveIntegerField(default=0, editable=False)
-    avatar = models.ImageField(upload_to=scramble_uploaded_filename, null=True, blank=True)
+    avatar = models.ImageField(upload_to=scramble_uploaded_filename, default="images/default-user.png")
     qrcode = models.CharField(max_length=200, blank=True, default='')
 
     class Meta:
@@ -27,6 +27,35 @@ class Clap(models.Model):
 
     class Meta:
         ordering = ('created',)
+
+class Follower(models.Model):
+    profile = models.ForeignKey(Profile, related_name='followers', on_delete=models.CASCADE)
+    created = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=100, blank=True, default='')
+    fullName = models.CharField(max_length=100, blank=True, default='')
+    avatar = models.CharField(max_length=100, blank=True, default='')
+    info = models.TextField(default='')
+    currentFollowed = models.BooleanField(default=False)
+    userId = models.CharField(max_length=40, blank=True, default='')
+
+    class Meta:
+        ordering = ('-created',)
+
+class Notification(models.Model):
+    profile = models.ForeignKey(Profile, related_name='notifications', on_delete=models.CASCADE)
+
+    created = models.DateTimeField(auto_now_add=True)
+    info = models.TextField(default='')
+    type = models.CharField(max_length=100, blank=True, default='newfollower')
+    readed = models.BooleanField(default=False)
+
+    # profileUserName = models.CharField(max_length=100, blank=True, default='')
+    profileFullName = models.CharField(max_length=100, blank=True, default='')
+    profileAvatar = models.CharField(max_length=100, blank=True, default='')
+    profileId = models.CharField(max_length=40, blank=True, default='')
+
+    class Meta:
+        ordering = ('-created',)
 
 class SocialNetwork(models.Model):
     owner = models.ForeignKey('auth.User', related_name='socialnetworks', on_delete=models.CASCADE)
@@ -64,8 +93,8 @@ class Stock(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     color = models.TextField()
     size = models.TextField()
-    code = models.TextField()
-    pin = models.TextField()
+    code = models.TextField(editable=False)
+    pin = models.TextField(editable=False)
 
     class Meta:
         ordering = ('created',)

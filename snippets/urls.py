@@ -53,7 +53,19 @@ urlpatterns = format_suffix_patterns([
         name='clap-list'),
     url(r'^claps/(?P<pk>[0-9]+)/$',
         views.ClapDetail.as_view(),
-        name='clap-detail')
+        name='clap-detail'),
+    url(r'^followers/$',
+        views.FollowerList.as_view(),
+        name='follower-list'),
+    url(r'^followers/(?P<pk>[0-9]+)/$',
+        views.FollowerDetail.as_view(),
+        name='follower-detail'),
+    url(r'^notifications/$',
+        views.NotificationList.as_view(),
+        name='notification-list'),
+    url(r'^notifications/(?P<pk>[0-9]+)/$',
+        views.NotificationDetail.as_view(),
+        name='notification-detail')        
 ])
 
 # Login and logout views for the browsable API
@@ -62,9 +74,12 @@ urlpatterns += [
     url(r'^api-auth/update', views.update_user),
     url(r'^updateprofile', views.update_profile),
     url(r'^clap-profile', views.clap_profile),
+    url(r'^follow', views.follow),
+    url(r'^unfollow', views.unfollow),
     url(r'^qrcode', views.qr_generate),
     url(r'^send-message', views.send_message),
     url(r'^link-stuff', views.link_stuff),
     url(r'^delete-user', views.delete_user),
     url(r'^track', views.tracking),
+    url(r'^notifications-unreaded', views.notifications_unreaded),
 ]
