@@ -372,7 +372,7 @@ def update_user(request):
     email = queryset[0].email
     print(email)
     send_html_mail('Password change', 
-                   'Your DirStuff password have been changed. Visit our website: http://www.dircoolstuff.com/dir', 
+                   'Your DirStuff password have been changed. Visit our website: https://www.dirstuff.com', 
                    email)
     #end test
 
@@ -386,7 +386,7 @@ def qr_generate(request):
     tshirt = TShirt(owner=request.user, message="", color="black", size="M", code=qrname)
     tshirt.save()
 
-    data = str(urllib.parse.quote('http://www.dircoolstuff.com/dir/#/viewtshirts/', safe=':/#-')) + str(qrname)
+    data = str(urllib.parse.quote('https://www.dirstuff.com/#/viewtshirts/', safe=':/#-')) + str(qrname)
 
     img = pyqrcode.create(data, error = 'H')
     saveUri = 'webapps/dir/images/' + str(qrname) + '.png';
