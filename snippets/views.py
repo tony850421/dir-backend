@@ -4,7 +4,7 @@ from rest_framework import generics
 from django.contrib import auth
 from django.contrib.auth.models import User
 from rest_framework import permissions
-from snippets.permissions import IsOwnerOrReadOnly, IsMySelfOrReadOnly, IsProfileOwnerOrReadOnly
+from snippets.permissions import IsOwnerOrReadOnly, IsMySelfOrReadOnly, IsProfileOwnerOrReadOnly, IsProfileVisibleOrOwner
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
@@ -74,7 +74,7 @@ class ProfileList(generics.ListCreateAPIView):
 class ProfileDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsProfileVisibleOrOwner)
 
 class ClapList(generics.ListAPIView):
     queryset = Clap.objects.all()
@@ -328,7 +328,8 @@ def create_user(request):
                 stock.delete()
 
                 #test email
-                send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
+                if profile.confReceiveMails == True:
+                    send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
                 #end test
 
             return Response({'response': 'ok'})
@@ -349,7 +350,8 @@ def create_user(request):
                 profile.save()
 
                 #test email
-                send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
+                if profile.confReceiveMails == True:
+                    send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
                 #end test
 
             return Response({'response': 'ok'})
@@ -369,11 +371,12 @@ def update_user(request):
     #email test
     queryset = Profile.objects.all()
     queryset = queryset.filter(owner=user)
-    email = queryset[0].email
-    print(email)
-    send_html_mail('Password change', 
-                   'Your DirStuff password have been changed. Visit our website: https://www.dirstuff.com', 
-                   email)
+    profile = queryset[0]
+
+    if profile.confReceiveMails == True:
+        send_html_mail('Password changed', 
+                        'Your DirStuff password have been changed', 
+                        profile.email)
     #end test
 
     return Response({'response': 'ok'})
@@ -436,7 +439,40 @@ def update_profile(request):
         profile.save()
         
         #test email
-        send_html_mail('Update Profile', 'Your DirStuff profile have been updated', profile.email)
+        if profile.confReceiveMails == True:
+            send_html_mail('Update Profile', 'Your DirStuff profile have been updated', profile.email)
+        #end test
+
+        return Response({'response': 'ok'})
+    return Response({'response': 'bad'})
+
+@api_view(['PUT'])
+@permission_classes((permissions.IsAuthenticated, IsOwnerOrReadOnly))
+def change_profile_config(request):
+
+    confVisible = json.loads(request.data['visible'])
+    confEmailVisible = json.loads(request.data['emailVisible'])
+    confReceiveMails = json.loads(request.data['receiveMails'])
+
+    # print('change_profile_config')
+    # print(confVisible)
+    # print(confEmailVisible)
+    # print(confReceiveMails)
+
+    queryset = Profile.objects.all()
+    queryset = queryset.filter(owner=request.user)
+    profile = queryset[0]
+
+    if (profile):
+        profile.confVisible = confVisible
+        profile.confEmailVisible = confEmailVisible
+        profile.confReceiveMails = confReceiveMails
+
+        profile.save()
+        
+        #test email
+        if profile.confReceiveMails == True:
+            send_html_mail('Update Profile', 'Your DirStuff profile config have been updated', profile.email)
         #end test
 
         return Response({'response': 'ok'})
@@ -460,7 +496,8 @@ def clap_profile(request):
             profile.save()
 
             # test email
-            send_html_mail('Claps', 'Your DirStuff profile received a new clap', profile.email)
+            if profile.confReceiveMails == True:
+                send_html_mail('Claps', 'Your DirStuff profile received a new clap', profile.email)
             # end test
 
         if exist.count() == 0 and test == True:
@@ -497,7 +534,8 @@ def follow(request):
             notif = Notification(profile=profile, profileId=myprofile.id, type='newfollower')
             notif.save()
             # test email
-            send_html_mail('Follower', 'You have a new follower', profile.email)
+            if profile.confReceiveMails == True:
+                send_html_mail('Follower', 'You have a new follower', profile.email)
             # end test
 
         if exist.count() == 0 and test == True:

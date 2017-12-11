@@ -17,6 +17,10 @@ class Profile(models.Model):
     avatar = models.ImageField(upload_to=scramble_uploaded_filename, default="images/default-user.png")
     qrcode = models.CharField(max_length=200, blank=True, default='')
 
+    confVisible = models.BooleanField(default=True)
+    confEmailVisible = models.BooleanField(default=True)
+    confReceiveMails = models.BooleanField(default=True)
+
     class Meta:
         ordering = ('created',)
 

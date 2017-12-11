@@ -27,8 +27,12 @@ class EmailThread(threading.Thread):
         send_mail(
         self.subject,
         self.html_content,
-        'dir@tony850421.webfactional.com',
-        [self.recipient_list]
+        'admin@dirstuff.com',
+        [self.recipient_list],
+        html_message='<p>' + self.html_content + '</p>' + 
+        '<br>Please visit our website at:' +
+        '<br>https://www.dirstuff.com' + '<br>' +
+        '<br>...Best Regards...<br><strong>!!!Dirstuff Team!!!</strong>'
         )
 
 class NotificationThread(threading.Thread):

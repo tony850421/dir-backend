@@ -29,7 +29,7 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname', 'email', 'qrcode', 'claps', 'followers', 'notifications')
+        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname', 'email', 'qrcode', 'claps', 'followers', 'notifications', 'confVisible', 'confEmailVisible', 'confReceiveMails')
 
 
 class ClapSerializer(serializers.HyperlinkedModelSerializer):

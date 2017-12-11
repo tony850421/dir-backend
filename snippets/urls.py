@@ -47,7 +47,6 @@ urlpatterns = format_suffix_patterns([
     url(r'^users/(?P<pk>[0-9]+)/$',
         views.UserDetail.as_view(),
         name='user-detail'),
-
     url(r'^claps/$',
         views.ClapList.as_view(),
         name='clap-list'),
@@ -73,6 +72,7 @@ urlpatterns += [
     url(r'^api-auth/register', views.create_user),
     url(r'^api-auth/update', views.update_user),
     url(r'^updateprofile', views.update_profile),
+    url(r'^setprofileconfig', views.change_profile_config),
     url(r'^clap-profile', views.clap_profile),
     url(r'^follow', views.follow),
     url(r'^unfollow', views.unfollow),
