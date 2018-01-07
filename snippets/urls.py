@@ -78,6 +78,7 @@ urlpatterns += [
     url(r'^unfollow', views.unfollow),
     url(r'^qrcode', views.qr_generate),
     url(r'^send-message', views.send_message),
+    url(r'^leave-message', views.leave_message),
     url(r'^link-stuff', views.link_stuff),
     url(r'^delete-user', views.delete_user),
     url(r'^track', views.tracking),

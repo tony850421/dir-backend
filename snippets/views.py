@@ -12,7 +12,7 @@ from rest_framework.reverse import reverse
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 from rest_framework.pagination import PageNumberPagination
 import pyqrcode
-from PIL import Image
+from PIL import Image, ImageOps
 import uuid
 import urllib
 from django.db.models import Q
@@ -408,6 +408,7 @@ def qr_generate(request):
         im = Image.open(saveUri)
         im = im.convert("RGBA")
         logo = Image.open('webapps/dir/images/' + avatar)
+        logo = ImageOps.expand(logo, border=7, fill='white')
         box = (230,230,350,350)
         im.crop(box)
         region = logo
@@ -587,6 +588,24 @@ def send_message(request):
 
     return Response({'response': 'bad'})
 
+@api_view(['POST'])
+@permission_classes((AllowAny,))
+def leave_message(request):
+    sender = request.data['sender']
+    subject = request.data['subject']
+    body = request.data['body']
+
+    users = User.objects.all()
+    queryset = users.filter(username='admin')
+    if queryset:
+        admin = queryset[0]
+        message = Message(owner=admin, sender=sender, receiver='admin', subject=subject, body=body, readed=False)
+        message.save()
+
+        return Response({'response': 'ok'})
+
+    return Response({'response': 'bad'})
+    
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def link_stuff(request):
