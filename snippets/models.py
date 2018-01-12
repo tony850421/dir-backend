@@ -10,6 +10,7 @@ class Profile(models.Model):
 
     email = models.EmailField(blank=False, default='')
     fullname = models.CharField(max_length=100, blank=True, default='')
+    phone = models.TextField(default='+8613817991444')
     created = models.DateTimeField(auto_now_add=True)
     info = models.TextField(default='')
     rating = models.DecimalField(default=0.0, max_digits=4, decimal_places=2, editable=False)
@@ -77,6 +78,16 @@ class Snippet(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100, blank=True, default='')
     body = models.TextField()
+
+    class Meta:
+        ordering = ('created',)
+
+class MediaFile(models.Model):
+    owner = models.ForeignKey('auth.User', related_name='mediafiles', on_delete=models.CASCADE)
+
+    created = models.DateTimeField(auto_now_add=True)
+    title = models.CharField(max_length=100, blank=True, default='file')
+    banner = models.ImageField(upload_to=scramble_uploaded_filename, default="images/features-background.jpg")
 
     class Meta:
         ordering = ('created',)

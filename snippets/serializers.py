@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap, Follower, Notification
+from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap, Follower, Notification, MediaFile
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class ProfileSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname', 'email', 'qrcode', 'claps', 'followers', 'notifications', 'confVisible', 'confEmailVisible', 'confReceiveMails')
+        fields = ('url', 'id', 'created', 'owner', 'info', 'rating', 'score', 'avatar', 'fullname', 'email', 'phone', 'qrcode', 'claps', 'followers', 'notifications', 'confVisible', 'confEmailVisible', 'confReceiveMails')
 
 
 class ClapSerializer(serializers.HyperlinkedModelSerializer):
@@ -69,6 +69,13 @@ class SnippetSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Snippet
         fields = ('url', 'id', 'created', 'owner', 'title', 'body')
+
+class MediaFileSerializer(serializers.HyperlinkedModelSerializer):
+    owner = serializers.ReadOnlyField(source='owner.username')
+
+    class Meta:
+        model = MediaFile
+        fields = ('url', 'id', 'owner', 'title', 'banner')
 
 class TShirtSerializer(serializers.HyperlinkedModelSerializer):
     owner = serializers.ReadOnlyField(source='owner.username')

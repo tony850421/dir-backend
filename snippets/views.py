@@ -1,5 +1,5 @@
-from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap, Follower, Notification
-from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerializer, ProfileSerializer, SocialNetworkSerializer, StockSerializer, MessageSerializer, ClapSerializer, FollowerSerializer, NotificationSerializer
+from snippets.models import Snippet, TShirt, Profile, SocialNetwork, Stock, Message, Clap, Follower, Notification, MediaFile
+from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerializer, ProfileSerializer, SocialNetworkSerializer, StockSerializer, MessageSerializer, ClapSerializer, FollowerSerializer, NotificationSerializer, MediaFileSerializer
 from rest_framework import generics
 from django.contrib import auth
 from django.contrib.auth.models import User
@@ -247,6 +247,33 @@ class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SnippetSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
 
+class MediaFileList(generics.ListCreateAPIView):
+    queryset = MediaFile.objects.all()
+    serializer_class = MediaFileSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, )
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+    def get_queryset(self):
+        """
+        Optionally restricts the returned SocialNetwork to a given user,
+        by filtering against a `username` query parameter in the URL.
+        api/socialnetworks?username=tony
+        """
+        queryset = MediaFile.objects.all()
+        username = self.request.query_params.get('username', None)
+        userqueryset = User.objects.all()
+        users = userqueryset.filter(username=username)
+        if len(users) and username is not None:
+            queryset = queryset.filter(owner=users[0])
+        return queryset
+
+class MediaFileDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = MediaFile.objects.all()
+    serializer_class = MediaFileSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly)
+
 class StockList(generics.ListCreateAPIView):
     queryset = Stock.objects.all()
     serializer_class = StockSerializer
@@ -293,6 +320,7 @@ def api_root(request, format=None):
         'socialnetworks': reverse('socialnetwork-list', request=request, format=format),
         'tshirts': reverse('tshirt-list', request=request, format=format),
         'snippets': reverse('snippet-list', request=request, format=format),
+        'mediafiles': reverse('mediafile-list', request=request, format=format),
         'stocks': reverse('stock-list', request=request, format=format),
         'messages': reverse('message-list', request=request, format=format),
         'claps': reverse('clap-list', request=request, format=format),
@@ -323,8 +351,12 @@ def create_user(request):
                 print("nice and easy")
                 tshirt = TShirt(owner=user, message="", color=stock.color, size=stock.size, code=stock.code)
                 profile = Profile(owner=user, email=request.data['email'], fullname=request.data['username'])
+                banner = MediaFile(owner=user)
+
                 tshirt.save()
                 profile.save()
+                banner.save()
+
                 stock.delete()
 
                 #test email
@@ -347,7 +379,10 @@ def create_user(request):
                 print("nice and easy two")
                 print('email:'+request.data['email'])
                 profile = Profile(owner=user, email=request.data['email'], fullname=request.data['username'])
+                banner = MediaFile(owner=user)
+
                 profile.save()
+                banner.save()
 
                 #test email
                 if profile.confReceiveMails == True:
@@ -430,6 +465,7 @@ def update_profile(request):
     score = request.data['score']
     fullname = request.data['fullname']
     email = request.data['email']
+    phone = request.data['phone']
     profile = Profile.objects.get(pk=id)
     if (profile):
         profile.info = info
@@ -437,6 +473,7 @@ def update_profile(request):
         profile.score = score
         profile.fullname = fullname
         profile.email = email
+        profile.phone = phone
         profile.save()
         
         #test email
@@ -582,6 +619,7 @@ def send_message(request):
         receiverUser = queryset[0]
         message = Message(owner=receiverUser, sender=sender, receiver=receiver, subject=subject, body=body, readed=False)
         message.save()
+
         message = Message(owner=request.user, sender=sender, receiver=receiver, subject=subject, body=body)
         message.save()
         return Response({'response': 'ok'})
@@ -605,7 +643,7 @@ def leave_message(request):
         return Response({'response': 'ok'})
 
     return Response({'response': 'bad'})
-    
+
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def link_stuff(request):
