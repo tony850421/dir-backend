@@ -15,7 +15,7 @@ class Profile(models.Model):
     info = models.TextField(default='')
     rating = models.DecimalField(default=0.0, max_digits=4, decimal_places=2, editable=False)
     score = models.PositiveIntegerField(default=0, editable=False)
-    avatar = models.ImageField(upload_to=scramble_uploaded_filename, default="images/default-user.png")
+    avatar = models.ImageField(upload_to=scramble_uploaded_filename, default="webapps/dir/images/default-user.png")
     qrcode = models.CharField(max_length=200, blank=True, default='')
 
     confVisible = models.BooleanField(default=True)
@@ -87,7 +87,7 @@ class MediaFile(models.Model):
 
     created = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=100, blank=True, default='file')
-    banner = models.ImageField(upload_to=scramble_uploaded_filename, default="images/features-background.jpg")
+    banner = models.ImageField(upload_to=scramble_uploaded_filename, default="webapps/dir/images/features-background.jpg")
 
     class Meta:
         ordering = ('created',)
