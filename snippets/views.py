@@ -445,8 +445,8 @@ def qr_generate(request):
             im = Image.open(saveUri)
             im = im.convert("RGBA")
             logo = Image.open('webapps/dir/images/' + avatar)
-            print ('logo->>' + logo)
-            # logo = ImageOps.expand(logo, border=7, fill='white')
+            print (logo)
+            logo = ImageOps.expand(logo, border=7, fill='white')
             # box = (230,230,350,350)
             # im.crop(box)
             # region = logo
