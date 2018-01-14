@@ -445,13 +445,13 @@ def qr_generate(request):
             im = Image.open(saveUri)
             im = im.convert("RGBA")
             logo = Image.open('webapps/dir/images/' + avatar)
-            logo = ImageOps.expand(logo, border=7, fill='white')
-            box = (230,230,350,350)
-            im.crop(box)
-            region = logo
-            region = region.resize((box[2] - box[0], box[3] - box[1]))
-            im.paste(region,box)
-            im.save(saveUri)
+            # logo = ImageOps.expand(logo, border=7, fill='white')
+            # box = (230,230,350,350)
+            # im.crop(box)
+            # region = logo
+            # region = region.resize((box[2] - box[0], box[3] - box[1]))
+            # im.paste(region,box)
+            # im.save(saveUri)
         except Exception as e:
             raise e
 
