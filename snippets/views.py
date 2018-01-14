@@ -440,6 +440,7 @@ def qr_generate(request):
         avatarUrl = profile.avatar.url
         lavatar = avatarUrl.split("/")
         avatar = lavatar[len(lavatar) - 1]
+        print ('AVATARR->>>>' + avatar)
         im = Image.open(saveUri)
         im = im.convert("RGBA")
         logo = Image.open('webapps/dir/images/' + avatar)
