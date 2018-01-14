@@ -440,17 +440,20 @@ def qr_generate(request):
         avatarUrl = profile.avatar.url
         lavatar = avatarUrl.split("/")
         avatar = lavatar[len(lavatar) - 1]
-        print ('AVATARR->>>>' + avatar)
-        im = Image.open(saveUri)
-        im = im.convert("RGBA")
-        logo = Image.open('webapps/dir/images/' + avatar)
-        logo = ImageOps.expand(logo, border=7, fill='white')
-        box = (230,230,350,350)
-        im.crop(box)
-        region = logo
-        region = region.resize((box[2] - box[0], box[3] - box[1]))
-        im.paste(region,box)
-        im.save(saveUri)
+        
+        try:
+            im = Image.open(saveUri)
+            im = im.convert("RGBA")
+            logo = Image.open('webapps/dir/images/' + avatar)
+            logo = ImageOps.expand(logo, border=7, fill='white')
+            box = (230,230,350,350)
+            im.crop(box)
+            region = logo
+            region = region.resize((box[2] - box[0], box[3] - box[1]))
+            im.paste(region,box)
+            im.save(saveUri)
+        except Exception as e:
+            raise e
 
     profile.qrcode = str(qrname) + '.png'
     profile.save()
