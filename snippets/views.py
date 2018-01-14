@@ -447,12 +447,12 @@ def qr_generate(request):
             logo = Image.open('webapps/dir/images/' + avatar)
             print (logo)
             logo = ImageOps.expand(logo, border=7, fill='white')
-            # box = (230,230,350,350)
-            # im.crop(box)
-            # region = logo
-            # region = region.resize((box[2] - box[0], box[3] - box[1]))
-            # im.paste(region,box)
-            # im.save(saveUri)
+            box = (230,230,350,350)
+            im.crop(box)
+            region = logo
+            region = region.resize((box[2] - box[0], box[3] - box[1]))
+            im.paste(region,box)
+            im.save(saveUri)
         except Exception as e:
             print(e)
 
