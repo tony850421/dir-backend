@@ -454,7 +454,7 @@ def qr_generate(request):
             # im.paste(region,box)
             # im.save(saveUri)
         except Exception as e:
-            raise e
+            print(e)
 
     profile.qrcode = str(qrname) + '.png'
     profile.save()
