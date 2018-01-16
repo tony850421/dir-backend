@@ -71,7 +71,7 @@ INSTALLED_APPS = (
 EMAIL_HOST = 'smtp.webfaction.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'dirstuff'
-EMAIL_HOST_PASSWORD = 'dir1234'
+EMAIL_HOST_PASSWORD = 'dirstuffdirstuff1234,.'
 # EMAIL_USE_TLS = True
 
 MIDDLEWARE_CLASSES = (

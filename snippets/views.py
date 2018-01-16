@@ -343,12 +343,10 @@ def create_user(request):
 
         serialized = UserSerializer(data=request.data)
         if serialized.is_valid():
-            print("valid")
             serialized.save()
 
             user = auth.authenticate(username=request.data['username'], password=request.data['password']);
             if user is not None:
-                print("nice and easy")
                 tshirt = TShirt(owner=user, message="", color=stock.color, size=stock.size, code=stock.code)
                 profile = Profile(owner=user, email=request.data['email'], fullname=request.data['username'])
                 banner = MediaFile(owner=user)
@@ -361,23 +359,19 @@ def create_user(request):
 
                 #test email
                 if profile.confReceiveMails == True:
-                    send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
+                    send_html_mail('Welcome to DirStuff', 'Welcome to DIRSTUFF', profile.email)
                 #end test
 
             return Response({'response': 'ok'})
         else:
-            print("no no")
             return Response({'response': 'bad'})
     else:
         serialized = UserSerializer(data=request.data)
         if serialized.is_valid():
-            print("valid")
             serialized.save()
 
             user = auth.authenticate(username=request.data['username'], password=request.data['password']);
             if user is not None:
-                print("nice and easy two")
-                print('email:'+request.data['email'])
                 profile = Profile(owner=user, email=request.data['email'], fullname=request.data['username'])
                 banner = MediaFile(owner=user)
 
@@ -386,12 +380,11 @@ def create_user(request):
 
                 #test email
                 if profile.confReceiveMails == True:
-                    send_html_mail('Welcome to DirStuff', 'Welcome message...', profile.email)
+                    send_html_mail('Welcome to DirStuff', 'Welcome to DIRSTUFF', profile.email)
                 #end test
 
             return Response({'response': 'ok'})
         else:
-            print("no no two")
             return Response({'response': 'bad'})
 
 @api_view(['POST'])
