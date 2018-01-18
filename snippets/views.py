@@ -613,13 +613,20 @@ def send_message(request):
 
     users = User.objects.all()
     queryset = users.filter(username=receiver)
-    if queryset:
+    if queryset.count() > 0:
+        print('contando los mensajes')
+        mjs = Message.objects.all()
+        print(mjs.count())
+
         receiverUser = queryset[0]
         message = Message(owner=receiverUser, sender=sender, receiver=receiver, subject=subject, body=body, readed=False)
         message.save()
 
         message = Message(owner=request.user, sender=sender, receiver=receiver, subject=subject, body=body)
         message.save()
+
+        mjs = Message.objects.all()
+        print(mjs.count())
         return Response({'response': 'ok'})
 
     return Response({'response': 'bad'})
