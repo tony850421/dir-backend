@@ -3,7 +3,7 @@ from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerial
 from rest_framework import generics
 from django.contrib import auth
 from django.contrib.auth.models import User
-from rest_framework import permissions
+from rest_framework import permissions, authentication
 from snippets.permissions import IsOwnerOrReadOnly, IsMySelfOrReadOnly, IsProfileOwnerOrReadOnly, IsProfileVisibleOrOwner
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -628,6 +628,8 @@ def send_message(request):
     return Response({'response': 'bad'})
 
 @api_view(['POST'])
+@authentication_classes([])
+@permission_classes((AllowAny,))
 def leave_message(request):
     sender = request.data['sender']
     subject = request.data['subject']
