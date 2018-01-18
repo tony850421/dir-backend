@@ -613,7 +613,7 @@ def send_message(request):
 
     users = User.objects.all()
     queryset = users.filter(username=receiver)
-    
+
     if queryset.count() > 0:
 
         receiverUser = queryset[0]
@@ -629,6 +629,7 @@ def send_message(request):
 
 @api_view(['POST'])
 @permission_classes((AllowAny,))
+@authentication_classes([])
 def leave_message(request):
     sender = request.data['sender']
     subject = request.data['subject']
