@@ -3,9 +3,9 @@ from snippets.serializers import UserSerializer, SnippetSerializer, TShirtSerial
 from rest_framework import generics
 from django.contrib import auth
 from django.contrib.auth.models import User
-from rest_framework import permissions, authentication
+from rest_framework import permissions
 from snippets.permissions import IsOwnerOrReadOnly, IsMySelfOrReadOnly, IsProfileOwnerOrReadOnly, IsProfileVisibleOrOwner
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
