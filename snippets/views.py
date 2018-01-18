@@ -628,8 +628,6 @@ def send_message(request):
     return Response({'response': 'bad'})
 
 @api_view(['POST'])
-@permission_classes((AllowAny,))
-@authentication_classes([])
 def leave_message(request):
     sender = request.data['sender']
     subject = request.data['subject']
