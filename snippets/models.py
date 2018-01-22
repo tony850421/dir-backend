@@ -10,7 +10,7 @@ class Profile(models.Model):
 
     email = models.EmailField(blank=False, default='')
     fullname = models.CharField(max_length=100, blank=True, default='')
-    phone = models.TextField(default='+8613817991444')
+    phone = models.TextField(default='')
     created = models.DateTimeField(auto_now_add=True)
     info = models.TextField(default='')
     rating = models.DecimalField(default=0.0, max_digits=4, decimal_places=2, editable=False)
