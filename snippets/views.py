@@ -181,9 +181,10 @@ class SocialNetworkList(generics.ListCreateAPIView):
         username = self.request.query_params.get('username', None)
         userqueryset = User.objects.all()
         users = userqueryset.filter(username=username)
-        if len(users) and username is not None:
+        if users.count() != 0 and username is not None:
             queryset = queryset.filter(owner=users[0])
-        return queryset
+            return queryset
+        return []
 
 class SocialNetworkDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = SocialNetwork.objects.all()
@@ -207,7 +208,8 @@ class TShirtList(generics.ListCreateAPIView):
         code = self.request.query_params.get('code', None)
         if code is not None:
             queryset = queryset.filter(code=code)
-        return queryset
+            return queryset
+        return []
 
 class TShirtDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = TShirt.objects.all()
@@ -238,9 +240,10 @@ class SnippetList(generics.ListCreateAPIView):
         username = self.request.query_params.get('username', None)
         userqueryset = User.objects.all()
         users = userqueryset.filter(username=username)
-        if len(users) and username is not None:
+        if users.count() != 0 and username is not None:
             queryset = queryset.filter(owner=users[0])
-        return queryset
+            return queryset
+        return []
 
 class SnippetDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Snippet.objects.all()
